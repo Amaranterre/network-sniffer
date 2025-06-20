@@ -6,7 +6,8 @@
 #include <arpa/inet.h>
 
 #define PORT 8081
-#define BUFFER_SIZE 65536
+#define BUFFER_SIZE 1048576
+// #define BUFFER_SIZE 65536
 
 void* server_handler(void *arg) ;
 

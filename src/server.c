@@ -32,7 +32,6 @@ void parsing_msgs() {
         cJSON_AddNumberToObject(msg, "time_stamp", curr->timestamp);
         cJSON_AddStringToObject(msg, "src_ip", curr->src_ip);
         cJSON_AddStringToObject(msg, "dst_ip", curr->dst_ip);
-        cJSON_AddStringToObject(msg, "src_ip", curr->src_ip);
         cJSON_AddNumberToObject(msg, "size", curr->bytes);
         cJSON_AddStringToObject(msg, "protocol", get_protocol_name(curr->ip_p));
         cJSON_AddNumberToObject(msg, "transaction_id", curr->ip_id);

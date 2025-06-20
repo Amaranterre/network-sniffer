@@ -10,13 +10,13 @@ traffic_stat_t* find_or_create_stat(const struct ip* iphdr, time_t timestamp) {
     pthread_mutex_lock(&mcb.lock);
 
     traffic_stat_t* curr = mcb.msgs_head;
-    while (curr) {
-        if (curr->timestamp == timestamp) {
-            pthread_mutex_unlock(&mcb.lock);
-            return curr;
-        }
-        curr = curr->next;
-    }
+    // while (curr) {
+    //     if (curr->timestamp == timestamp) {
+    //         pthread_mutex_unlock(&mcb.lock);
+    //         return curr;
+    //     }
+    //     curr = curr->next;
+    // }
     // New stat
     traffic_stat_t* new_stat = (traffic_stat_t*)malloc(sizeof(traffic_stat_t));
     strncpy(new_stat->src_ip, src_ip, INET_ADDRSTRLEN);
@@ -36,7 +36,9 @@ traffic_stat_t* find_or_create_stat(const struct ip* iphdr, time_t timestamp) {
 
 void packet_handler(u_char* args, const struct pcap_pkthdr* header, const u_char* packet) {
     const struct ether_header* ethernet = (struct ether_header*)(packet);
-    if (ntohs(ethernet->ether_type) != ETHERTYPE_IP) return;
+    if (ntohs(ethernet->ether_type) != ETHERTYPE_IP) {
+        return;
+    }
 
     const struct ip* iphdr = (struct ip*)(packet + sizeof(struct ether_header));
 
@@ -61,25 +63,45 @@ void print_stats() {
 
     pthread_mutex_lock(&mcb.lock);
 
+    int total_size = 0;
+    int size_sec_60 = 0;
+    int size_sec_30 = 0;
+    time_t now = time(NULL);
+
     traffic_stat_t* curr = mcb.msgs_head;
-    while (curr && cnt < 10) {
-        char time_str[64];
-        strftime(time_str, sizeof(time_str), "%F %T", localtime(&(curr->timestamp)));
-        printf(
-            "[%s]\t\t%s\t%s\t%lu bytes\t%s\t%d\n", 
-            time_str, 
-            curr->src_ip, 
-            curr->dst_ip, 
-            curr->bytes,
-            get_protocol_name(curr->ip_p),
-            curr->ip_id
-        );
-        curr = curr->next;
+    while (curr) {
+        if(cnt < 10) {
+            char time_str[64];
+            strftime(time_str, sizeof(time_str), "%F %T", localtime(&(curr->timestamp)));
+            printf(
+                "[%s]\t\t%s\t%s\t%lu bytes\t%s\t%d\n", 
+                time_str, 
+                curr->src_ip, 
+                curr->dst_ip, 
+                curr->bytes,
+                get_protocol_name(curr->ip_p),
+                curr->ip_id
+            );
+        } else if (cnt == 10) {
+            printf("......\n");
+        }
+        total_size += curr->bytes;
+        if(now - curr->timestamp <= 60) {
+            size_sec_60 += curr->bytes;
+        }
+        if(now - curr->timestamp <= 30) {
+            size_sec_30 += curr->bytes;
+        }
+        curr = curr->next;            
 
         ++cnt;
     }
+    
+    printf("-- Total size: %d\n", total_size);
+    printf("-- Past 60 seconds: %d\n", size_sec_60);
+    printf("-- Past 30 seconds: %d\n", size_sec_30);
+    
     printf("-------------------------------------------------\n");
-
     pthread_mutex_unlock(&mcb.lock);
 
 }
