@@ -1,6 +1,10 @@
 #include "sniffer.h"
 #include "server.h"
 
+/**
+ * @brief Server and sniffer use mcb to communicate with each other.
+ * We add mutex-lock to avoid race condition between writing of sniffer and reading of server.
+ */
 message_control_t mcb = {
     .msgs_head = NULL,
     .lock = PTHREAD_MUTEX_INITIALIZER,

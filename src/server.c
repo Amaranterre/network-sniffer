@@ -10,6 +10,9 @@ void print_msgs(cJSON* msgs) {
     free(out);
 }
 
+/**
+ * @brief We use cJSON to parse messages to json.
+ */
 void parsing_msgs() {
 
     pthread_mutex_lock(&mcb.lock);
@@ -43,13 +46,18 @@ void parsing_msgs() {
     pthread_mutex_unlock(&mcb.lock);
 }
 
-
+/**
+ * @brief We apply a simple socket server to communicate to client.
+ */
 
 void* server_handler(void *arg) {
     int server_fd, client_fd;
     struct sockaddr_in addr;
     char buffer[BUFFER_SIZE];
 
+    /**
+     * Socket initialization
+     */
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) {
         perror("socket failed");
@@ -85,7 +93,11 @@ void* server_handler(void *arg) {
             buffer[read_size] = '\0';
             printf("Request:\n%s\n", buffer);
 
-            // Construct response
+            /**
+             * Construct repsonse
+             */
+            
+            // Call `parsing_msgs` to get newest msgs
             parsing_msgs();
             char *str_json = cJSON_Print(msgs_bus);
             

@@ -39,10 +39,6 @@ void packet_handler(u_char* args, const struct pcap_pkthdr* header, const u_char
     if (ntohs(ethernet->ether_type) != ETHERTYPE_IP) return;
 
     const struct ip* iphdr = (struct ip*)(packet + sizeof(struct ether_header));
-    // char src_ip[INET_ADDRSTRLEN];
-    // char dst_ip[INET_ADDRSTRLEN];
-    // inet_ntop(AF_INET, &(iphdr->ip_src), src_ip, INET_ADDRSTRLEN);
-    // inet_ntop(AF_INET, &(iphdr->ip_dst), dst_ip, INET_ADDRSTRLEN);
 
     time_t timestamp = header->ts.tv_sec;
     traffic_stat_t* stat = find_or_create_stat(iphdr, timestamp);
