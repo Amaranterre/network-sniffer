@@ -1,0 +1,29 @@
+# 编译输出
+/build/
+main
+
+# CMake 缓存和构建产物
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# 编译中间文件
+*.o
+*.o.d
+*.a
+*.so
+*.dylib
+*.exe
+*.out
+
+# 编辑器配置（可选）
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 日志或调试文件（如需）
+*.log

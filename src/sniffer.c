@@ -1,0 +1,113 @@
+#include "sniffer.h"
+
+traffic_stat_t* find_or_create_stat(const struct ip* iphdr, time_t timestamp) {
+    char src_ip[INET_ADDRSTRLEN];
+    char dst_ip[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(iphdr->ip_src), src_ip, INET_ADDRSTRLEN);
+    inet_ntop(AF_INET, &(iphdr->ip_dst), dst_ip, INET_ADDRSTRLEN);
+
+
+    pthread_mutex_lock(&mcb.lock);
+
+    traffic_stat_t* curr = mcb.msgs_head;
+    while (curr) {
+        if (curr->timestamp == timestamp) {
+            pthread_mutex_unlock(&mcb.lock);
+            return curr;
+        }
+        curr = curr->next;
+    }
+    // New stat
+    traffic_stat_t* new_stat = (traffic_stat_t*)malloc(sizeof(traffic_stat_t));
+    strncpy(new_stat->src_ip, src_ip, INET_ADDRSTRLEN);
+    strncpy(new_stat->dst_ip, dst_ip, INET_ADDRSTRLEN);
+    new_stat->timestamp = timestamp;
+    new_stat->bytes = 0;
+    new_stat->ip_p = iphdr->ip_p;
+    new_stat->ip_off = iphdr->ip_off;
+    new_stat->ip_id = iphdr->ip_id;
+
+    new_stat->next = mcb.msgs_head;
+    mcb.msgs_head = new_stat;
+    pthread_mutex_unlock(&mcb.lock);
+
+    return new_stat;
+}
+
+void packet_handler(u_char* args, const struct pcap_pkthdr* header, const u_char* packet) {
+    const struct ether_header* ethernet = (struct ether_header*)(packet);
+    if (ntohs(ethernet->ether_type) != ETHERTYPE_IP) return;
+
+    const struct ip* iphdr = (struct ip*)(packet + sizeof(struct ether_header));
+    // char src_ip[INET_ADDRSTRLEN];
+    // char dst_ip[INET_ADDRSTRLEN];
+    // inet_ntop(AF_INET, &(iphdr->ip_src), src_ip, INET_ADDRSTRLEN);
+    // inet_ntop(AF_INET, &(iphdr->ip_dst), dst_ip, INET_ADDRSTRLEN);
+
+    time_t timestamp = header->ts.tv_sec;
+    traffic_stat_t* stat = find_or_create_stat(iphdr, timestamp);
+    stat->bytes += header->len;
+}
+
+const char* get_protocol_name(uint8_t ip_p) {
+    switch (ip_p) {
+        case IPPROTO_ICMP: return "ICMP";
+        case IPPROTO_TCP: return "TCP";
+        case IPPROTO_UDP: return "UDP";
+        case IPPROTO_IGMP: return "IGMP";
+        // case IPPROTO_OSPF: return "OSPF";
+        default: return "UNKNOWN";
+    }
+}
+
+void print_stats() {
+    int cnt = 0;
+
+    pthread_mutex_lock(&mcb.lock);
+
+    traffic_stat_t* curr = mcb.msgs_head;
+    while (curr && cnt < 10) {
+        char time_str[64];
+        strftime(time_str, sizeof(time_str), "%F %T", localtime(&(curr->timestamp)));
+        printf(
+            "[%s]\t\t%s\t%s\t%lu bytes\t%s\t%d\n", 
+            time_str, 
+            curr->src_ip, 
+            curr->dst_ip, 
+            curr->bytes,
+            get_protocol_name(curr->ip_p),
+            curr->ip_id
+        );
+        curr = curr->next;
+
+        ++cnt;
+    }
+
+    pthread_mutex_unlock(&mcb.lock);
+
+}
+
+
+
+void* sniffing(void *arg) {
+    char *dev = arg;
+    char errbuf[PCAP_ERRBUF_SIZE];
+    pcap_t* handle;
+
+    handle = pcap_open_live(dev, SNAP_LEN, 1, 1000, errbuf);
+    if (!handle) {
+        fprintf(stderr, "Could not open device %s: %s\n", dev, errbuf);
+        return NULL;
+    }
+
+    printf("Listening on %s...\n", dev);
+
+    // Start capture packet
+    while (1) {
+        pcap_dispatch(handle, 0, packet_handler, NULL);
+        sleep(0.5);
+    }
+
+    pcap_close(handle);
+    return NULL;
+}
