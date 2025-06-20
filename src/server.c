@@ -113,8 +113,12 @@ void* server_handler(void *arg) {
             );
 
             // Response client
-            send(client_fd, response, length, 0);
-
+            ssize_t bytes_sent = send(client_fd, response, length, 0);
+            if (bytes_sent < 0) {
+                perror("send failed");
+            } else if (bytes_sent < length) {
+                fprintf(stderr, "Partial send: only %zd of %d bytes sent\n", bytes_sent, length);
+            }
 
             // Recycle memory
             free(str_json);

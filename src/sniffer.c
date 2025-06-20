@@ -78,6 +78,7 @@ void print_stats() {
 
         ++cnt;
     }
+    printf("-------------------------------------------------\n");
 
     pthread_mutex_unlock(&mcb.lock);
 
@@ -101,6 +102,7 @@ void* sniffing(void *arg) {
     // Start capture packet
     while (1) {
         pcap_dispatch(handle, 0, packet_handler, NULL);
+        print_stats();
         sleep(0.5);
     }
 
