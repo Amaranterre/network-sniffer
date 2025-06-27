@@ -100,6 +100,12 @@ void* server_handler(void *arg) {
             // Call `parsing_msgs` to get newest msgs
             parsing_msgs();
             char *str_json = cJSON_Print(msgs_bus);
+            if (str_json == NULL) {
+                const char *error_response = "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\n\r\n";
+                send(client_fd, error_response, strlen(error_response), 0);
+                close(client_fd);
+                continue;
+            }
             
             // 计算所需缓冲区大小
             size_t header_len = snprintf(NULL, 0,
@@ -117,7 +123,7 @@ void* server_handler(void *arg) {
                 continue;
             }
             // 构造响应
-            int length = snprintf(response, total_len,
+            snprintf(response, total_len,
                 "HTTP/1.1 200 OK\r\n"
                 "Content-Type: application/json\r\n"
                 "Content-Length: %zu\r\n"
@@ -127,19 +133,18 @@ void* server_handler(void *arg) {
                 strlen(str_json), str_json);
 
             // Response client
-            ssize_t bytes_sent = send(client_fd, response, length, 0);
+            ssize_t bytes_sent = send(client_fd, response, total_len, 0);
             if (bytes_sent < 0) {
                 perror("send failed");
-            } else if (bytes_sent < length) {
-                fprintf(stderr, "Partial send: only %zd of %d bytes sent\n", bytes_sent, length);
+            } else if (bytes_sent < total_len) {
+                fprintf(stderr, "Partial send: only %zd of %d bytes sent\n", bytes_sent, total_len);
             }
 
             // Recycle memory
             free(str_json);
             free(response);
-            close(client_fd);
         }
-
+        close(client_fd);
     }
 
 }
