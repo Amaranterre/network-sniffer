@@ -12,8 +12,17 @@ traffic_stat_t* find_or_create_stat(const struct ip* iphdr, time_t timestamp) {
     traffic_stat_t* curr = mcb.msgs_head;
     
     traffic_stat_t* new_stat = (traffic_stat_t*)malloc(sizeof(traffic_stat_t));
-    strncpy(new_stat->src_ip, src_ip, INET_ADDRSTRLEN);
-    strncpy(new_stat->dst_ip, dst_ip, INET_ADDRSTRLEN);
+    if(!new_stat) {
+        perror("Failed to allocate memory for traffic_stat_t");
+        pthread_mutex_unlock(&mcb.lock);
+        return NULL;
+    }
+
+    strncpy(new_stat->src_ip, src_ip, sizeof(new_stat->src_ip) - 1);
+    strncpy(new_stat->dst_ip, dst_ip, sizeof(new_stat->dst_ip) - 1);
+    new_stat->src_ip[sizeof(new_stat->src_ip) - 1] = '\0';
+    new_stat->dst_ip[sizeof(new_stat->dst_ip) - 1] = '\0';
+
     new_stat->timestamp = timestamp;
     new_stat->bytes = 0;
     new_stat->ip_p = iphdr->ip_p;
