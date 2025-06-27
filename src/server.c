@@ -93,7 +93,7 @@ void* server_handler(void *arg) {
         int read_size = read(client_fd, buffer, sizeof(buffer) - 1);
         if (read_size > 0) {
             buffer[read_size] = '\0';
-            printf("Request:\n%s\n", buffer);
+            // printf("Request:\n%s\n", buffer);
 
             /**
              * Construct repsonse

@@ -121,6 +121,10 @@ void* sniffing(void *arg) {
         return NULL;
     }
 
+    if (pcap_set_buffer_size(handle, 1024 * 1024 * 10) != 0) {
+        fprintf(stderr, "Failed to set buffer size: %s\n", pcap_geterr(handle));
+    }
+    
     printf("Listening on %s...\n", dev);
 
     // Start capture packet
