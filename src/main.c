@@ -22,16 +22,23 @@ int main(int argc, char* argv[]) {
     pthread_t sniffer_tid;
     pthread_t server_tid;
 
-    pthread_attr_t st_attr;
-    pthread_attr_init(&st_attr);
-    pthread_attr_setstacksize(&st_attr, 1048576 * 2);
+    pthread_attr_t server_attr;
+    pthread_attr_init(&server_attr);
+    pthread_attr_setstacksize(&server_attr, 1048576 * 2);
 
-    pthread_create(&sniffer_tid, NULL, sniffing, (char*)dev);
-    pthread_create(&server_tid, &st_attr, server_handler, NULL);
+
+    pthread_attr_t sniffer_attr;
+    pthread_attr_init(&sniffer_attr);
+    pthread_attr_setstacksize(&sniffer_attr, 1048576 * 2);
+
+
+    pthread_create(&sniffer_tid, &sniffer_attr, sniffing, (char*)dev);
+    pthread_create(&server_tid, &server_attr, server_handler, NULL);
 
     pthread_join(sniffer_tid, NULL);
     pthread_join(server_tid, NULL);
 
-    pthread_attr_destroy(&st_attr);
+    pthread_attr_destroy(&server_attr);
+    pthread_attr_destroy(&sniffer_attr);
     return 0;
 }
