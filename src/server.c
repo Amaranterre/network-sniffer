@@ -101,16 +101,30 @@ void* server_handler(void *arg) {
             parsing_msgs();
             char *str_json = cJSON_Print(msgs_bus);
             
-            char response[BUFFER_SIZE];
-            int length = snprintf(response, sizeof(response),
+            // 计算所需缓冲区大小
+            size_t header_len = snprintf(NULL, 0,
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: application/json\r\n"
+                "Content-Length: %zu\r\n"
+                "Connection: close\r\n"
+                "\r\n",
+                strlen(str_json));
+            size_t total_len = header_len + strlen(str_json) + 1;
+            char *response = malloc(total_len);
+            if (!response) {
+                free(str_json);
+                close(client_fd);
+                continue;
+            }
+            // 构造响应
+            int length = snprintf(response, total_len,
                 "HTTP/1.1 200 OK\r\n"
                 "Content-Type: application/json\r\n"
                 "Content-Length: %zu\r\n"
                 "Connection: close\r\n"
                 "\r\n"
                 "%s",
-                strlen(str_json), str_json
-            );
+                strlen(str_json), str_json);
 
             // Response client
             ssize_t bytes_sent = send(client_fd, response, length, 0);
@@ -122,6 +136,7 @@ void* server_handler(void *arg) {
 
             // Recycle memory
             free(str_json);
+            free(response);
             close(client_fd);
         }
 
