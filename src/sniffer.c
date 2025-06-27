@@ -115,16 +115,26 @@ void* sniffing(void *arg) {
     char errbuf[PCAP_ERRBUF_SIZE];
     pcap_t* handle;
 
-    handle = pcap_open_live(dev, SNAP_LEN, 1, 1000, errbuf);
-    if (!handle) {
-        fprintf(stderr, "Could not open device %s: %s\n", dev, errbuf);
-        return NULL;
+    handle = pcap_create(dev, errbuf);
+    if (pcap_set_timeout(handle, 1000) != 0) {
+        fprintf(stderr, "Failed to set time out : %s\n", pcap_geterr(handle));
     }
-
+    if (pcap_set_promisc(handle, 1) != 0) {
+        fprintf(stderr, "Failed to set promisc: %s\n", pcap_geterr(handle));
+    }
+    if (pcap_set_snaplen(handle, SNAP_LEN) != 0) {
+        fprintf(stderr, "Failed to set snap len %s\n", pcap_geterr(handle));
+    }
     if (pcap_set_buffer_size(handle, 1024 * 1024 * 10) != 0) {
         fprintf(stderr, "Failed to set buffer size: %s\n", pcap_geterr(handle));
     }
-    
+    if (pcap_activate(handle) != 0 ) {
+        fprintf(stderr, "Failed to activate handle: %s\n", pcap_geterr(handle));
+        return NULL;
+    }
+
+
+
     printf("Listening on %s...\n", dev);
 
     // Start capture packet
