@@ -82,12 +82,18 @@ void* server_handler(void *arg) {
 
     printf("Server listening on port %d...\n", PORT);
 
+    // I choose it randomly -_-
+    int socket_buffer_size = 3 * BUFFER_SIZE;
     while (1) {
         client_fd = accept(server_fd, NULL, NULL);
         if (client_fd < 0) {
             perror("accept failed");
             continue;
         }
+        // Increase buffer size
+        setsockopt(client_fd, SOL_SOCKET, SO_SNDBUF, &socket_buffer_size, sizeof(socket_buffer_size));
+        setsockopt(client_fd, SOL_SOCKET, SO_RCVBUF, &socket_buffer_size, sizeof(socket_buffer_size));
+
         int read_size = read(client_fd, buffer, sizeof(buffer) - 1);
         if (read_size > 0) {
             buffer[read_size] = '\0';
@@ -106,7 +112,7 @@ void* server_handler(void *arg) {
                 close(client_fd);
                 continue;
             }
-            
+
             // 计算所需缓冲区大小
             size_t header_len = snprintf(NULL, 0,
                 "HTTP/1.1 200 OK\r\n"
@@ -133,12 +139,16 @@ void* server_handler(void *arg) {
                 strlen(str_json), str_json);
 
             // Response client
-            ssize_t bytes_sent = send(client_fd, response, total_len, 0);
-            if (bytes_sent < 0) {
-                perror("send failed");
-            } else if (bytes_sent < total_len) {
-                fprintf(stderr, "Partial send: only %zd of %d bytes sent\n", bytes_sent, total_len);
+            // Big packet may not be sent in on function call
+            size_t total_sent = 0;
+            while(total_sent < total_len) {
+                ssize_t bytes_sent = send(client_fd, response + total_sent, total_len - total_sent, 0);
+                if (bytes_sent < 0) {
+                    perror("send failed");
+                } 
+                total_sent += bytes_sent;
             }
+
 
             // Recycle memory
             free(str_json);
