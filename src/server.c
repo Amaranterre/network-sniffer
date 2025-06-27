@@ -2,7 +2,7 @@
 #include "sniffer.h"
 #include "cJSON.h"
 
-cJSON *msgs_bus;
+cJSON *msgs_bus = NULL;
 
 void print_msgs(cJSON* msgs) {
     char *out = cJSON_Print(msgs);
@@ -18,8 +18,12 @@ void parsing_msgs() {
     pthread_mutex_lock(&mcb.lock);
 
     traffic_stat_t* curr = mcb.msgs_head;
+    
+    if(msgs_bus) {
+        cJSON_Delete(msgs_bus);
 
-    cJSON_Delete(msgs_bus);
+    }
+
     msgs_bus = cJSON_CreateArray();
     
     cJSON* msgs = cJSON_CreateArray();
