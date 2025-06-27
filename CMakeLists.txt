@@ -45,5 +45,5 @@ else()
     target_link_libraries(openwrt-sniffer PRIVATE pcap)
 endif()
 
-target_link_libraries(openwrt-sniffer PRIVATE Threads::Threads)
+target_link_libraries(openwrt-sniffer PRIVATE pthread)
 
