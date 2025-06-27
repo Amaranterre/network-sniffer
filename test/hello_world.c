@@ -14,7 +14,8 @@
 #define PORT 8081
 #define BUFFER_SIZE 1048576
 
-int main() {
+
+void* server_handler(void *arg) {
     int server_fd, client_fd;
     struct sockaddr_in addr;
     char buffer[BUFFER_SIZE];
@@ -45,4 +46,44 @@ int main() {
     }
 
     printf("Server listening on port %d...\n", PORT);
+
+    while (1) {
+        client_fd = accept(server_fd, NULL, NULL);
+        if (client_fd < 0) {
+            perror("accept failed");
+            continue;
+        }
+        int read_size = read(client_fd, buffer, sizeof(buffer) - 1);
+        if (read_size > 0) {
+            buffer[read_size] = '\0';
+            printf("Request:\n%s\n", buffer);
+
+            /**
+             * Construct repsonse
+             */
+            
+            // Call `parsing_msgs` to get newest msgs
+            char* response = "Hi";
+            int length =  3;
+
+            // Response client
+            ssize_t bytes_sent = send(client_fd, response, length, 0);
+            if (bytes_sent < 0) {
+                perror("send failed");
+            } else if (bytes_sent < length) {
+                fprintf(stderr, "Partial send: only %zd of %d bytes sent\n", bytes_sent, length);
+            }
+        }
+
+    }
+
+}
+
+int main() {
+    pthread_t server_tid;
+
+    pthread_create(&server_tid, NULL, server_handler, NULL);
+
+    pthread_join(server_tid, NULL);
+
 }

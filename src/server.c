@@ -18,7 +18,7 @@ void parsing_msgs() {
     pthread_mutex_lock(&mcb.lock);
 
     traffic_stat_t* curr = mcb.msgs_head;
-    
+
     if(msgs_bus) {
         cJSON_Delete(msgs_bus);
 
@@ -50,9 +50,8 @@ void parsing_msgs() {
 }
 
 /**
- * @brief We apply a simple socket server to communicate to client.
+ * @brief We implement a simple socket server to communicate to client.
  */
-
 void* server_handler(void *arg) {
     int server_fd, client_fd;
     struct sockaddr_in addr;
