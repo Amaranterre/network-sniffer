@@ -10,14 +10,7 @@ traffic_stat_t* find_or_create_stat(const struct ip* iphdr, time_t timestamp) {
     pthread_mutex_lock(&mcb.lock);
 
     traffic_stat_t* curr = mcb.msgs_head;
-    // while (curr) {
-    //     if (curr->timestamp == timestamp) {
-    //         pthread_mutex_unlock(&mcb.lock);
-    //         return curr;
-    //     }
-    //     curr = curr->next;
-    // }
-    // New stat
+    
     traffic_stat_t* new_stat = (traffic_stat_t*)malloc(sizeof(traffic_stat_t));
     strncpy(new_stat->src_ip, src_ip, INET_ADDRSTRLEN);
     strncpy(new_stat->dst_ip, dst_ip, INET_ADDRSTRLEN);
@@ -83,7 +76,7 @@ void print_stats() {
                 curr->ip_id
             );
         } else if (cnt == 10) {
-            printf("......\n");
+            printf("......\n\n");
         }
         total_size += curr->bytes;
         if(now - curr->timestamp <= 60) {
