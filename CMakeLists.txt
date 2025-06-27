@@ -3,6 +3,7 @@ project(openwrt-sniffer C)
 
 # 设置 C 标准
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O1 -fno-omit-frame-pointer")
 
 # 查找 pcap 库
 find_package(PkgConfig)

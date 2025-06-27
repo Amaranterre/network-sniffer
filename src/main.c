@@ -23,10 +23,10 @@ int main(int argc, char* argv[]) {
     pthread_t server_tid;
 
     pthread_create(&sniffer_tid, NULL, sniffing, (char*)dev);
-    pthread_create(&server_tid, NULL, server_handler, (void*)dev);
+    // pthread_create(&server_tid, NULL, server_handler, (void*)dev);
 
     pthread_join(sniffer_tid, NULL);
-    pthread_join(server_tid, NULL);
+    // pthread_join(server_tid, NULL);
 
     return 0;
 }
