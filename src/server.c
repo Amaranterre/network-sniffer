@@ -26,8 +26,6 @@ void parsing_msgs() {
 
     msgs_bus = cJSON_CreateArray();
     
-    cJSON* msgs = cJSON_CreateArray();
-
     while (curr) {
         cJSON *msg = cJSON_CreateObject();
 
@@ -124,6 +122,7 @@ void* server_handler(void *arg) {
 
             // Recycle memory
             free(str_json);
+            close(client_fd);
         }
 
     }
