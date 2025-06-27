@@ -17,7 +17,8 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    char* dev = argv[1];
+    // char* dev = argv[1];
+    char* dev = "eth0";
     pthread_t sniffer_tid;
     pthread_t server_tid;
 
